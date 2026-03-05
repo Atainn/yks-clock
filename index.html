@@ -1,34 +1,108 @@
-<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>TYT Clock</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>
-body{margin:0;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(120deg,#0b1220,#021018);color:white;font-family:Arial;overflow:hidden}
-h1{opacity:.8;margin:0 0 12px}
-#clock{display:flex;font-size:120px;font-weight:bold;letter-spacing:10px}
-#tyt{position:fixed;bottom:70px;font-size:18px;opacity:.85}
-#fsBtn{position:fixed;right:18px;bottom:18px;padding:10px 14px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.25);color:rgba(255,255,255,.9);border-radius:12px;font-weight:700;cursor:pointer;backdrop-filter:blur(10px)}
-#fsBtn:hover{background:rgba(255,255,255,.10)}
-</style></head><body>
-<h1>Saat</h1>
-<div id="clock">00:00</div>
-<div id="tyt">TYT: hesaplanıyor...</div>
-<button id="fsBtn">Tam ekran</button>
-<script>
-const target=new Date("2026-06-20T10:15:00");
-function update(){
-  const now=new Date();
-  let h=now.getHours().toString().padStart(2,"0");
-  let m=now.getMinutes().toString().padStart(2,"0");
-  document.getElementById("clock").innerText=h+":"+m;
-  let diff=target-now; if(diff<0) diff=0;
-  let days=Math.floor(diff/(1000*60*60*24));
-  document.getElementById("tyt").innerText="TYT: "+days+" gün";
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>TYT Flip Clock</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+margin:0;
+height:100vh;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+background:linear-gradient(120deg,#0b1220,#021018);
+color:white;
+font-family:Arial;
 }
-setInterval(update,1000); update();
+
+.clock{
+display:flex;
+gap:20px;
+font-size:120px;
+font-weight:bold;
+}
+
+.card{
+background:#111;
+padding:40px;
+border-radius:15px;
+box-shadow:0 10px 30px rgba(0,0,0,0.5);
+}
+
+#tyt{
+position:fixed;
+bottom:60px;
+opacity:0.8;
+}
+
+button{
+position:fixed;
+bottom:20px;
+right:20px;
+padding:10px 16px;
+border:none;
+background:#222;
+color:white;
+border-radius:10px;
+cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="clock">
+<div class="card" id="h">00</div>
+<div>:</div>
+<div class="card" id="m">00</div>
+</div>
+
+<div id="tyt">TYT: hesaplanıyor...</div>
+
+<button onclick="toggleFullscreen()">Tam ekran</button>
+
+<script>
+
+const target=new Date("2026-06-20T10:15:00");
+
+function update(){
+
+const now=new Date();
+
+let h=now.getHours().toString().padStart(2,"0");
+let m=now.getMinutes().toString().padStart(2,"0");
+
+document.getElementById("h").innerText=h;
+document.getElementById("m").innerText=m;
+
+let diff=target-now;
+if(diff<0) diff=0;
+
+let days=Math.floor(diff/(1000*60*60*24));
+
+document.getElementById("tyt").innerText="TYT: "+days+" gün";
+}
+
+setInterval(update,1000);
+update();
 
 async function toggleFullscreen(){
-  try{
-    if(!document.fullscreenElement) await document.documentElement.requestFullscreen();
-    else await document.exitFullscreen();
-  }catch(e){}
+
+if(!document.fullscreenElement)
+await document.documentElement.requestFullscreen();
+else
+await document.exitFullscreen();
+
 }
-document.getElementById("fsBtn").addEventListener("click", toggleFullscreen);
-window.addEventListener("keydown",(e)=>{ if(e.key.toLowerCase()==="f") toggleFullscreen(); });
-</script></body></html>
+
+document.addEventListener("keydown",e=>{
+if(e.key==="f") toggleFullscreen();
+});
+
+</script>
+
+</body>
+</html>
