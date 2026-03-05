@@ -1,391 +1,108 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ata | TYT Flip</title>
+<meta charset="UTF-8">
+<title>TYT Flip Clock</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    :root{
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.72);
-      --panel: rgba(0,0,0,.34);
-      --stroke: rgba(255,255,255,.14);
-      --shadow: 0 24px 80px rgba(0,0,0,.55);
-      --radius: 18px;
+<style>
+body{
+margin:0;
+height:100vh;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+background:linear-gradient(120deg,#0b1220,#021018);
+color:white;
+font-family:Arial;
+}
 
-      /* Flip sizing */
-      --cardW: 140px;
-      --cardH: 170px;
-      --gap: 14px;
-      --font: 112px;
-      --half: calc(var(--cardH) / 2);
-    }
+.clock{
+display:flex;
+gap:20px;
+font-size:120px;
+font-weight:bold;
+}
 
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      color:var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      overflow:hidden;
-      background:#000;
-    }
+.card{
+background:#111;
+padding:40px;
+border-radius:15px;
+box-shadow:0 10px 30px rgba(0,0,0,0.5);
+}
 
-    /* Background image (no stretching) */
-    .bg{
-      position:fixed; inset:0;
-      background-image: url("bg.jpg");
-      background-size: cover;           /* bozulma yok (esneme yok) */
-      background-position: center;      /* kadraj ortadan */
-      background-repeat: no-repeat;
-      transform: scale(1.02);
-      filter: saturate(1.03) contrast(1.02);
-    }
-    /* Readability overlay */
-    .bg::after{
-      content:"";
-      position:absolute; inset:0;
-      background:
-        radial-gradient(900px 600px at 50% 40%, rgba(0,0,0,.15), rgba(0,0,0,.72)),
-        linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.65));
-      backdrop-filter: blur(2px);
-    }
+#tyt{
+position:fixed;
+bottom:60px;
+opacity:0.8;
+}
 
-    .stage{
-      position:relative;
-      height:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-    }
-
-    .wrap{
-      width:min(980px, 96vw);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:24px;
-    }
-
-    .title{
-      text-align:center;
-      font-weight:800;
-      letter-spacing:.4px;
-      font-size: clamp(22px, 2.5vw, 34px);
-      opacity:.92;
-      margin:0;
-    }
-
-    .clockRow{
-      display:flex;
-      align-items:center;
-      gap: var(--gap);
-      filter: drop-shadow(var(--shadow));
-      user-select:none;
-    }
-
-    .colon{
-      font-size: calc(var(--font) * 0.55);
-      font-weight:800;
-      opacity:.85;
-      transform: translateY(6px);
-    }
-
-    /* Flip card */
-    .flip{
-      width: var(--cardW);
-      height: var(--cardH);
-      border-radius: var(--radius);
-      position:relative;
-      perspective: 900px;
-    }
-    .card{
-      position:absolute; inset:0;
-      border-radius: var(--radius);
-      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
-      border:1px solid var(--stroke);
-      box-shadow: 0 18px 70px rgba(0,0,0,.55);
-      overflow:hidden;
-    }
-    .half{
-      position:absolute;
-      left:0; right:0;
-      height: var(--half);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size: var(--font);
-      font-weight: 900;
-      letter-spacing: 1px;
-      color: var(--text);
-      text-shadow: 0 10px 30px rgba(0,0,0,.55);
-      font-variant-numeric: tabular-nums;
-      line-height: 1;
-    }
-    .top{
-      top:0;
-      background: rgba(0,0,0,.30);
-      border-bottom: 1px solid rgba(255,255,255,.10);
-    }
-    .bottom{
-      bottom:0;
-      background: rgba(0,0,0,.46);
-      transform: translateY(-1px);
-    }
-
-    /* The animated overlay halves */
-    .animTop, .animBottom{
-      position:absolute;
-      left:0; right:0;
-      height: var(--half);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size: var(--font);
-      font-weight:900;
-      letter-spacing:1px;
-      font-variant-numeric: tabular-nums;
-      color: var(--text);
-      text-shadow: 0 10px 30px rgba(0,0,0,.55);
-      backface-visibility:hidden;
-      transform-style:preserve-3d;
-      pointer-events:none;
-    }
-    .animTop{
-      top:0;
-      background: rgba(0,0,0,.30);
-      border-bottom: 1px solid rgba(255,255,255,.10);
-      transform-origin: bottom;
-      transform: rotateX(0deg);
-    }
-    .animBottom{
-      bottom:0;
-      background: rgba(0,0,0,.46);
-      transform-origin: top;
-      transform: rotateX(90deg);
-    }
-
-    /* Flip animation */
-    .flip.is-flipping .animTop{
-      animation: flipTop .42s cubic-bezier(.2,.75,.2,1) forwards;
-    }
-    .flip.is-flipping .animBottom{
-      animation: flipBottom .42s cubic-bezier(.2,.75,.2,1) forwards;
-      animation-delay: .18s;
-    }
-
-    @keyframes flipTop{
-      0%{ transform: rotateX(0deg); }
-      100%{ transform: rotateX(-90deg); }
-    }
-    @keyframes flipBottom{
-      0%{ transform: rotateX(90deg); }
-      100%{ transform: rotateX(0deg); }
-    }
-
-    /* Footer pills */
-    .meta{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:center;
-      align-items:center;
-      opacity:.95;
-    }
-    .pill{
-      background: rgba(0,0,0,.34);
-      border:1px solid rgba(255,255,255,.14);
-      padding:10px 14px;
-      border-radius: 999px;
-      font-weight:700;
-      color: var(--muted);
-      backdrop-filter: blur(10px);
-    }
-
-    /* Fullscreen button */
-    .fsBtn{
-      position:fixed;
-      right:18px;
-      bottom:18px;
-      padding:10px 14px;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.18);
-      background: rgba(0,0,0,.30);
-      color: rgba(255,255,255,.92);
-      font-weight:800;
-      cursor:pointer;
-      backdrop-filter: blur(12px);
-    }
-    .fsBtn:hover{ background: rgba(255,255,255,.10); }
-
-    @media (max-width: 700px){
-      :root{
-        --cardW: 100px;
-        --cardH: 120px;
-        --font: 80px;
-        --gap: 10px;
-        --radius: 16px;
-      }
-      .colon{ transform: translateY(4px); }
-    }
-  </style>
+button{
+position:fixed;
+bottom:20px;
+right:20px;
+padding:10px 16px;
+border:none;
+background:#222;
+color:white;
+border-radius:10px;
+cursor:pointer;
+}
+</style>
 </head>
+
 <body>
-  <div class="bg" aria-hidden="true"></div>
 
-  <main class="stage">
-    <div class="wrap">
-      <h1 class="title">Saat</h1>
+<div class="clock">
+<div class="card" id="h">00</div>
+<div>:</div>
+<div class="card" id="m">00</div>
+</div>
 
-      <div class="clockRow" aria-label="Saat ve dakika flip clock">
-        <div class="flip" data-slot="h1">
-          <div class="card">
-            <div class="half top" data-face="top">0</div>
-            <div class="half bottom" data-face="bottom">0</div>
-            <div class="animTop" data-anim="top">0</div>
-            <div class="animBottom" data-anim="bottom">0</div>
-          </div>
-        </div>
+<div id="tyt">TYT: hesaplanıyor...</div>
 
-        <div class="flip" data-slot="h2">
-          <div class="card">
-            <div class="half top" data-face="top">0</div>
-            <div class="half bottom" data-face="bottom">0</div>
-            <div class="animTop" data-anim="top">0</div>
-            <div class="animBottom" data-anim="bottom">0</div>
-          </div>
-        </div>
+<button onclick="toggleFullscreen()">Tam ekran</button>
 
-        <div class="colon">:</div>
+<script>
 
-        <div class="flip" data-slot="m1">
-          <div class="card">
-            <div class="half top" data-face="top">0</div>
-            <div class="half bottom" data-face="bottom">0</div>
-            <div class="animTop" data-anim="top">0</div>
-            <div class="animBottom" data-anim="bottom">0</div>
-          </div>
-        </div>
+const target=new Date("2026-06-20T10:15:00");
 
-        <div class="flip" data-slot="m2">
-          <div class="card">
-            <div class="half top" data-face="top">0</div>
-            <div class="half bottom" data-face="bottom">0</div>
-            <div class="animTop" data-anim="top">0</div>
-            <div class="animBottom" data-anim="bottom">0</div>
-          </div>
-        </div>
-      </div>
+function update(){
 
-      <div class="meta">
-        <span class="pill" id="datePill">--</span>
-        <span class="pill" id="tytPill">TYT: -- gün</span>
-        <span class="pill" style="opacity:.85">Kısayol: F (Tam ekran)</span>
-      </div>
-    </div>
-  </main>
+const now=new Date();
 
-  <button class="fsBtn" id="fsBtn" type="button">Tam ekran</button>
+let h=now.getHours().toString().padStart(2,"0");
+let m=now.getMinutes().toString().padStart(2,"0");
 
-  <script>
-    // ====== Config ======
-    const EXAM_ISO = "2026-06-20T10:15:00"; // TYT hedefin (yerel saat gibi davranır)
-    const examDate = new Date(EXAM_ISO);
+document.getElementById("h").innerText=h;
+document.getElementById("m").innerText=m;
 
-    // ====== Helpers ======
-    const pad2 = (n) => String(n).padStart(2, "0");
+let diff=target-now;
+if(diff<0) diff=0;
 
-    function formatTRDate(d){
-      const days = ["Paz","Pzt","Sal","Çar","Per","Cum","Cmt"];
-      const dd = pad2(d.getDate());
-      const mm = pad2(d.getMonth()+1);
-      const yy = d.getFullYear();
-      return `${dd}.${mm}.${yy} • ${days[d.getDay()]}`;
-    }
+let days=Math.floor(diff/(1000*60*60*24));
 
-    // ====== Flip driver ======
-    const flips = new Map(); // slot -> element
-    document.querySelectorAll(".flip").forEach(el => flips.set(el.dataset.slot, el));
+document.getElementById("tyt").innerText="TYT: "+days+" gün";
+}
 
-    const state = { h1:"0", h2:"0", m1:"0", m2:"0" };
+setInterval(update,1000);
+update();
 
-    function setFlip(slot, nextChar){
-      const el = flips.get(slot);
-      if(!el) return;
+async function toggleFullscreen(){
 
-      const cur = state[slot];
-      if (cur === nextChar) return;
+if(!document.fullscreenElement)
+await document.documentElement.requestFullscreen();
+else
+await document.exitFullscreen();
 
-      const top = el.querySelector('[data-face="top"]');
-      const bottom = el.querySelector('[data-face="bottom"]');
-      const aTop = el.querySelector('[data-anim="top"]');
-      const aBottom = el.querySelector('[data-anim="bottom"]');
+}
 
-      // Prepare animation text
-      aTop.textContent = cur;
-      aBottom.textContent = nextChar;
+document.addEventListener("keydown",e=>{
+if(e.key==="f") toggleFullscreen();
+});
 
-      // Start flipping
-      el.classList.remove("is-flipping"); // reset (for rapid updates)
-      void el.offsetWidth; // reflow
-      el.classList.add("is-flipping");
+</script>
 
-      // Mid/end updates
-      // When top flips away, set the static top to next
-      setTimeout(() => { top.textContent = nextChar; }, 180);
-      // When bottom flips down, set static bottom to next and cleanup
-      setTimeout(() => {
-        bottom.textContent = nextChar;
-        el.classList.remove("is-flipping");
-      }, 460);
-
-      state[slot] = nextChar;
-    }
-
-    function tickClock(){
-      const now = new Date();
-      const hh = pad2(now.getHours());
-      const mm = pad2(now.getMinutes());
-
-      setFlip("h1", hh[0]);
-      setFlip("h2", hh[1]);
-      setFlip("m1", mm[0]);
-      setFlip("m2", mm[1]);
-
-      document.getElementById("datePill").textContent = formatTRDate(now);
-    }
-
-    function tickTYTDays(){
-      const now = new Date();
-      let diff = examDate.getTime() - now.getTime();
-      if (diff < 0) diff = 0;
-      const days = Math.floor(diff / 86400000);
-      document.getElementById("tytPill").textContent = `TYT: ${days} gün`;
-    }
-
-    // ====== Fullscreen ======
-    async function toggleFullscreen(){
-      try{
-        if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
-        else await document.exitFullscreen();
-      }catch(e){}
-    }
-    document.getElementById("fsBtn").addEventListener("click", toggleFullscreen);
-    window.addEventListener("keydown", (e) => {
-      if (e.key && e.key.toLowerCase() === "f") toggleFullscreen();
-    });
-
-    // ====== Start ======
-    tickClock();
-    tickTYTDays();
-
-    // Clock: update frequently so minute change flips instantly (no seconds shown)
-    setInterval(tickClock, 500);
-
-    // TYT: once per minute is enough
-    setInterval(tickTYTDays, 60_000);
-  </script>
 </body>
 </html>
